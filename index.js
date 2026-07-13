@@ -48,7 +48,7 @@ app.get('/run', requireKey(RUN_KEY), async (req, res) => {
   running = true;
   const force = req.query.force === '1' || req.query.force === 'true';
   // Refresh takes 15 min – 3 h (audience processing wait) — run in background.
-  res.json({ ok: true, status: 'background', force, note: 'result posts to #bot-status; errors to #railway-logs' });
+  res.json({ ok: true, status: 'background', force, note: 'summary + errors post to #railway-logs' });
   try {
     await runRefresh({ trigger: 'manual', force });
   } catch (err) {
