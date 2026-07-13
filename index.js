@@ -43,7 +43,7 @@ function requireKey(envKey) {
 
 let running = false;
 
-app.get('/run', requireKey(RUN_KEY), async (_req, res) => {
+app.get('/run', requireKey(RUN_KEY), async (req, res) => {
   if (running) return res.status(409).json({ ok: false, error: 'a refresh is already in progress' });
   running = true;
   const force = req.query.force === '1' || req.query.force === 'true';
