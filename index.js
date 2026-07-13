@@ -24,7 +24,7 @@ const { saveSession, recentRuns } = require('./lib/storage');
 const PORT = process.env.PORT || 8080;
 const RUN_KEY = process.env.RUN_KEY || '';
 const SEED_PASSWORD = process.env.SEED_PASSWORD || '';
-const CRON_SCHEDULE = process.env.CRON_SCHEDULE || '0 7 1 * *'; // 1st of month, 7am CT
+const CRON_SCHEDULE = process.env.CRON_SCHEDULE || '0 5 * * *'; // daily, 5am CT
 const CRON_TZ = process.env.CRON_TZ || 'America/Chicago';
 
 const app = express();
@@ -46,10 +46,11 @@ let running = false;
 app.get('/run', requireKey(RUN_KEY), async (_req, res) => {
   if (running) return res.status(409).json({ ok: false, error: 'a refresh is already in progress' });
   running = true;
+  const force = req.query.force === '1' || req.query.force === 'true';
   // Refresh takes 15 min – 3 h (audience processing wait) — run in background.
-  res.json({ ok: true, status: 'background', note: 'result posts to #bot-status; errors to #railway-logs' });
+  res.json({ ok: true, status: 'background', force, note: 'result posts to #bot-status; errors to #railway-logs' });
   try {
-    await runRefresh({ trigger: 'manual' });
+    await runRefresh({ trigger: 'manual', force });
   } catch (err) {
     console.error('[/run] error:', err.message);
   } finally {

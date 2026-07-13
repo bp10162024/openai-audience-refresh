@@ -33,7 +33,8 @@ create table if not exists public.openai_audience_refresh_runs (
   matched_display text,
   campaigns_updated integer,
   old_archived integer,
-  error text
+  error text,
+  hash_fingerprint text  -- sha256 of the uploaded hash list; enables the daily no-change skip (added July 13 2026)
 );
 
 grant select, insert on public.openai_audience_refresh_runs to service_role;

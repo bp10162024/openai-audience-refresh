@@ -8,7 +8,10 @@ OpenAI's Advertiser API has **no audiences resource**, so this drives the Ads Ma
 UI headlessly (Playwright) with a stored browser session — the same seeded session
 `openai-receipt-grabber` uses (shared Supabase row `openai_grabber_session`).
 
-## Flow (cron: 1st of month, 7am CT)
+## Flow (cron: daily, 5am CT)
+
+A run first fingerprints the customer hash list; if it's byte-identical to the last fully successful run, it records `skipped_no_change` and does nothing further (no browser, no duplicate audience). Otherwise:
+
 
 1. `rebuild_openai_audience_export()` RPC rebuilds the hash snapshot in the warehouse
    (view `openai_ads_exclusion_hashes` — paying-customer emails, `sha256(lower(trim(email)))`,
