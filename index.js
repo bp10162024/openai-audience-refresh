@@ -18,7 +18,7 @@
 
 const express = require('express');
 const cron = require('node-cron');
-const { runRefresh } = require('./lib/refresh');
+const { runRefresh, diagnoseAudiences } = require('./lib/refresh');
 const { saveSession, recentRuns } = require('./lib/storage');
 
 const PORT = process.env.PORT || 8080;
@@ -55,6 +55,15 @@ app.get('/run', requireKey(RUN_KEY), async (req, res) => {
     console.error('[/run] error:', err.message);
   } finally {
     running = false;
+  }
+});
+
+// Temporary read-only diagnostic for the "audience row not found" drift.
+app.get('/diag', requireKey(RUN_KEY), async (_req, res) => {
+  try {
+    res.json({ ok: true, diag: await diagnoseAudiences() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message, stack: (err.stack || '').slice(0, 900) });
   }
 });
 
