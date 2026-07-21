@@ -67,38 +67,6 @@ app.get('/diag', requireKey(RUN_KEY), async (_req, res) => {
   }
 });
 
-// Temporary: introspect the Bright Data account so we can pick a residential
-// (non-unlocker) zone the browser can drive. Remove once the proxy is settled.
-app.get('/bright', requireKey(RUN_KEY), async (_req, res) => {
-  const key = process.env.BRIGHTDATA_API_KEY;
-  const out = { hasKey: !!key };
-  try {
-    const full = process.env.BRIGHTDATA_PROXY_URL || '';
-    if (full) {
-      const u = new URL(full);
-      out.currentProxy = { host: u.host, username: u.username, hasPassword: !!u.password };
-    }
-  } catch (e) { out.currentProxyParseError = e.message; }
-  if (key) {
-    const h = { Authorization: `Bearer ${key}` };
-    try {
-      const zr = await fetch('https://api.brightdata.com/zone/get_active_zones', { headers: h });
-      out.zonesStatus = zr.status;
-      out.zones = await zr.json().catch(() => null);
-      out.passwords = {};
-      if (Array.isArray(out.zones)) {
-        for (const z of out.zones) {
-          try {
-            const pr = await fetch('https://api.brightdata.com/zone/passwords?zone=' + encodeURIComponent(z.name), { headers: h });
-            out.passwords[z.name] = { status: pr.status, body: await pr.json().catch(() => null) };
-          } catch (e) { out.passwords[z.name] = { error: e.message }; }
-        }
-      }
-    } catch (e) { out.zonesError = e.message; }
-  }
-  res.json({ ok: true, bright: out });
-});
-
 app.get('/status', requireKey(RUN_KEY), async (_req, res) => {
   try {
     res.json({ ok: true, running, runs: await recentRuns(10) });
